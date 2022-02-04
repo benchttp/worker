@@ -37,3 +37,15 @@ func NewTransformer(x interface{}) (*Transformer, error) {
 	}
 	return &Transformer{Floats: floats}, nil
 }
+
+// SimpleTransformer is the interface to get a slice of float64 from a type.
+type SimpleTransformer interface {
+	FloatSlice() []float64
+}
+
+// TransformSimply returns a transformer loaded with floats
+// retrieved from the given SimpleTransformer.
+func TransformSimply(in SimpleTransformer) *Transformer {
+	f := in.FloatSlice()
+	return &Transformer{Floats: f}
+}
