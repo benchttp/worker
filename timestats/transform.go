@@ -7,22 +7,22 @@ import (
 	"github.com/montanaflynn/stats"
 )
 
-// Floater is the interface to get a float64 value from any struct.
+// Floater is the interface to get a float64 value from a struct.
 type Floater interface {
 	Float() float64
 }
 
-type Transformer struct {
-	Floats stats.Float64Data
-}
-
-// NewTransformer returns a transformer loaded with floats retrieved from x.
-// x is a slice of structs implementing timestats.Floater. Returns an error
-// if x is not a slice or if its elements do not implement timestats.Floater.
-func NewTransformer(x interface{}) (*Transformer, error) {
+// TransformIter returns a data set ready for computation.
+// The data set is built with floats retrieved from x.
+// x must be a slice of structs implementing timestats.Floater.
+func TransformIter(x interface{}) (stats.Float64Data, error) {
 	s := reflect.ValueOf(x)
 	if s.Kind() != reflect.Slice {
 		return nil, fmt.Errorf("received a non-slice type: %s", reflect.TypeOf(x))
+	}
+
+	if s.Len() == 0 {
+		return nil, ErrEmptySlice
 	}
 
 	floats := make(stats.Float64Data, s.Len())
@@ -31,21 +31,24 @@ func NewTransformer(x interface{}) (*Transformer, error) {
 		v := s.Index(i)
 		f, ok := v.Interface().(Floater)
 		if !ok {
-			return nil, fmt.Errorf("%s must implement timestats.Floater", v.Type())
+			return nil, fmt.Errorf("%s %w", v.Type(), ErrInterface)
 		}
 		floats[i] = f.Float()
 	}
-	return &Transformer{Floats: floats}, nil
+	return floats, nil
 }
 
-// SimpleTransformer is the interface to get a slice of float64 from a type.
-type SimpleTransformer interface {
+// FloatSlicer is the interface to get a slice of float64 from a type.
+type FloatSlicer interface {
 	FloatSlice() []float64
 }
 
-// TransformSimply returns a transformer loaded with floats
-// retrieved from the given SimpleTransformer.
-func TransformSimply(in SimpleTransformer) *Transformer {
-	f := in.FloatSlice()
-	return &Transformer{Floats: f}
+// Transform returns a data set ready for computation.
+// The data set is extracted from the given FloatSlicer.
+func Transform(in FloatSlicer) (stats.Float64Data, error) {
+	floats := in.FloatSlice()
+	if len(floats) == 0 {
+		return nil, ErrEmptySlice
+	}
+	return floats, nil
 }

@@ -13,7 +13,7 @@ import (
 // computed are not tested, as we would simply test that the third
 // party package is correctly tested.
 func TestCompute(t *testing.T) {
-	fakes := []fake{
+	fakes := fakes{
 		{time: 1 * time.Nanosecond},
 		{time: 10 * time.Nanosecond},
 		{time: 100 * time.Nanosecond},
@@ -27,12 +27,12 @@ func TestCompute(t *testing.T) {
 		{time: 900 * time.Nanosecond},
 		{time: 1000 * time.Nanosecond},
 	}
-	transformer, err := timestats.NewTransformer(fakes)
+	raw, err := timestats.Transform(fakes)
 	if err != nil {
 		t.Fatalf("want nil error, got %v", err)
 	}
 
-	s := timestats.Compute(transformer.Floats)
+	s := timestats.Compute(raw)
 	if reflect.ValueOf(s).IsZero() {
 		t.Errorf("want timestats.Stats to be non-zero value, got %+v", s)
 	}

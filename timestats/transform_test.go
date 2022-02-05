@@ -19,7 +19,7 @@ func (e fake) Float() float64 {
 	return float64(e.time)
 }
 
-func TestNewTransformer(t *testing.T) {
+func TestTransformIter(t *testing.T) {
 	for _, testcase := range []struct {
 		name    string
 		raw     interface{}
@@ -29,6 +29,12 @@ func TestNewTransformer(t *testing.T) {
 		{
 			name:    "return error for non-slice type",
 			raw:     struct{}{},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "return error for empty slice",
+			raw:     []fake{},
 			want:    nil,
 			wantErr: true,
 		},
@@ -50,7 +56,7 @@ func TestNewTransformer(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
-			transformer, err := timestats.NewTransformer(testcase.raw)
+			got, err := timestats.TransformIter(testcase.raw)
 
 			if testcase.wantErr {
 				if err == nil {
@@ -62,7 +68,6 @@ func TestNewTransformer(t *testing.T) {
 				t.Fatalf("want nil error, got %v", err)
 			}
 
-			got := transformer.Floats
 			if !reflect.DeepEqual(got, testcase.want) {
 				t.Errorf("incorrect transform: want %v, got %v", testcase.want, got)
 			}
@@ -83,12 +88,19 @@ func (f fakes) FloatSlice() []float64 {
 	return floats
 }
 
-func TestSimpleTransform(t *testing.T) {
+func TestTransform(t *testing.T) {
 	for _, testcase := range []struct {
-		name string
-		raw  timestats.SimpleTransformer
-		want stats.Float64Data
+		name    string
+		raw     timestats.FloatSlicer
+		want    stats.Float64Data
+		wantErr bool
 	}{
+		{
+			name:    "return error for empty slice",
+			raw:     fakes{},
+			want:    nil,
+			wantErr: true,
+		},
 		{
 			name: "load type that implements timestats.Transform",
 			raw:  fakes{{time: 1 * time.Nanosecond}, {time: 2 * time.Second}},
@@ -101,9 +113,18 @@ func TestSimpleTransform(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
-			transformer := timestats.TransformSimply(testcase.raw)
+			got, err := timestats.Transform(testcase.raw)
 
-			got := transformer.Floats
+			if testcase.wantErr {
+				if err == nil {
+					t.Fatal("want error, have none")
+				}
+				return // Do not continue test case, transformer == nil.
+			}
+			if err != nil {
+				t.Fatalf("want nil error, got %v", err)
+			}
+
 			if !reflect.DeepEqual(got, testcase.want) {
 				t.Errorf("incorrect transform: want %v, got %v", testcase.want, got)
 			}
