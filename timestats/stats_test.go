@@ -3,37 +3,39 @@ package timestats_test
 import (
 	"reflect"
 	"testing"
-	"time"
+
+	"github.com/montanaflynn/stats"
 
 	"github.com/benchttp/worker/timestats"
 )
 
-// TestCompute simply tests that timestats.Compute correctly
-// returns a non-zero value timestats.Stats. The actual statistics
-// computed are not tested, as we would simply test that the third
-// party package is correctly tested.
-func TestCompute(t *testing.T) {
-	fakes := fakes{
-		{time: 1 * time.Nanosecond},
-		{time: 10 * time.Nanosecond},
-		{time: 100 * time.Nanosecond},
-		{time: 200 * time.Nanosecond},
-		{time: 300 * time.Nanosecond},
-		{time: 400 * time.Nanosecond},
-		{time: 500 * time.Nanosecond},
-		{time: 600 * time.Nanosecond},
-		{time: 700 * time.Nanosecond},
-		{time: 800 * time.Nanosecond},
-		{time: 900 * time.Nanosecond},
-		{time: 1000 * time.Nanosecond},
-	}
-	raw, err := timestats.Transform(fakes)
-	if err != nil {
-		t.Fatalf("want nil error, got %v", err)
-	}
+// The following test simply tests that timestats.Compute return a non-zero
+// value of timestats.Stats. The actual statistics computation is not tested,
+// as it would be equivalent to testing the third party  package itself.
+// We can safely assume it is correctly tested.
 
-	s := timestats.Compute(raw)
-	if reflect.ValueOf(s).IsZero() {
-		t.Errorf("want timestats.Stats to be non-zero value, got %+v", s)
-	}
+func TestCompute(t *testing.T) {
+	t.Run("passing invalid dataset returns ErrCompute", func(t *testing.T) {
+		empty := stats.Float64Data{}
+
+		res, err := timestats.Compute(empty)
+		if err == nil {
+			t.Error("want error, got none")
+		}
+		if reflect.ValueOf(res).IsZero() {
+			t.Errorf("want timestats.Stats to be non-zero value, got %+v", res)
+		}
+	})
+
+	t.Run("happy path", func(t *testing.T) {
+		data := stats.Float64Data{1, 10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000}
+
+		res, err := timestats.Compute(data)
+		if err != nil {
+			t.Fatalf("want nil error, got %v", err)
+		}
+		if reflect.ValueOf(res).IsZero() {
+			t.Errorf("want timestats.Stats to be non-zero value, got %+v", res)
+		}
+	})
 }
