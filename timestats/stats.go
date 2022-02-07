@@ -95,6 +95,7 @@ func computeDecile(percent float64, data stats.Float64Data, e []string) (time.Du
 	if err != nil {
 		funcname := "Percentile"
 		e = append(e, fmt.Sprintf("%s: %s", funcname, err))
+		return 0, e
 	}
 	return time.Duration(decile), e
 }
