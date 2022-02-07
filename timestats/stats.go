@@ -1,3 +1,23 @@
+// Package timestats provides a wrapper around github.com/montanaflynn/stats
+// to compute common statistics for a dataset of time.Duration values.
+//
+// Any type implementing timestats.FloatSlicer or slice of timestats.Floater
+// can be transformed to a dataset compatible with the package.
+//
+// For example, using timestats.FloatSlicer:
+//	type MySlice []int64
+//	func (s MySlice) FloatSlice() []float64 {...}
+//
+//	dataset, _ := timestats.Transform(MySlice{1, 2, 3})
+//	stats := timestats.Compute(dataset)
+//
+// Using timestats.Floater:
+//	type MyType int64
+//	func (t MyType) Float() float64 {...}
+//
+//	dataset, _ := timestats.Transform([]MyType{1, 2, 3})
+//	stats := timestats.Compute(dataset)
+//
 package timestats
 
 import (
@@ -12,15 +32,23 @@ import (
 
 var deciles = [9]float64{10, 20, 30, 40, 50, 60, 70, 80, 90}
 
+// Stats represents the statistics computed from a given dataset.
 type Stats struct {
-	Min      time.Duration    `json:"min"`
-	Max      time.Duration    `json:"max"`
-	Mean     time.Duration    `json:"mean"`
-	Median   time.Duration    `json:"median"`
-	Variance time.Duration    `json:"variance"`
-	Deciles  [9]time.Duration `json:"deciles"`
+	Min      time.Duration `json:"min"`
+	Max      time.Duration `json:"max"`
+	Mean     time.Duration `json:"mean"`
+	Median   time.Duration `json:"median"`
+	Variance time.Duration `json:"variance"`
+	// Deciles is an array composed of the nine deciles.
+	// Deciles[0] is the first decile (10%), Deciles[8]
+	// is the 9th decile (90%).
+	Deciles [9]time.Duration `json:"deciles"`
 }
 
+// Compute computes the common statistics for a dataset.
+// ErrCompute if any error occurs during the computation.
+// When returning an error, the value of Stats may be
+// partially written.
 func Compute(data stats.Float64Data) (Stats, error) {
 	s := Stats{}
 	issues := []string{}
