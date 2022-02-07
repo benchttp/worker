@@ -22,7 +22,7 @@ func TestCompute(t *testing.T) {
 		if err == nil {
 			t.Error("want error, got none")
 		}
-		if reflect.ValueOf(res).IsZero() {
+		if !reflect.ValueOf(res).IsZero() {
 			t.Errorf("want timestats.Stats to be non-zero value, got %+v", res)
 		}
 	})
