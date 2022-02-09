@@ -1,21 +1,14 @@
 // Package timestats provides a wrapper around github.com/montanaflynn/stats
 // to compute common statistics for a dataset of time.Duration values.
 //
-// Any type implementing timestats.FloatSlicer or slice of timestats.Floater
-// can be transformed to a dataset compatible with the package.
+// Any type implementing timestats.FloatSlicer can be
+// transformed to a dataset compatible with the package.
 //
-// For example, using timestats.FloatSlicer:
+// For example:
 //	type MySlice []int64
 //	func (s MySlice) FloatSlice() []float64 {...}
 //
 //	dataset := timestats.Transform(MySlice{1, 2, 3})
-//	stats, err := timestats.Compute(dataset)
-//
-// Using timestats.Floater:
-//	type MyType int64
-//	func (t MyType) Float() float64 {...}
-//
-//	dataset, err := timestats.TransformIter([]MyType{1, 2, 3})
 //	stats, err := timestats.Compute(dataset)
 //
 package timestats
