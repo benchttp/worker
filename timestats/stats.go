@@ -22,9 +22,6 @@ package timestats
 
 import (
 	"fmt"
-	"reflect"
-	"runtime"
-	"strings"
 	"time"
 
 	"github.com/montanaflynn/stats"
@@ -59,21 +56,30 @@ func Compute(data stats.Float64Data) (Stats, error) {
 
 	// Handle flat statistics.
 	for _, v := range []struct {
-		f   func(input stats.Float64Data) (float64, error)
-		dst *time.Duration
+		name string
+		f    func(input stats.Float64Data) (float64, error)
+		dst  *time.Duration
 	}{
-		{stats.Min, &output.Min},
-		{stats.Max, &output.Max},
-		{stats.Mean, &output.Mean},
-		{stats.Median, &output.Median},
-		{stats.Variance, &output.Variance},
+		{"min", stats.Min, &output.Min},
+		{"max", stats.Max, &output.Max},
+		{"mean", stats.Mean, &output.Mean},
+		{"median", stats.Median, &output.Median},
+		{"variance", stats.Variance, &output.Variance},
 	} {
-		*v.dst, issues = computeStat(v.f, data, issues)
+		stat, err := computeStat(v.f, data, v.name)
+		*v.dst = time.Duration(stat)
+		if err != nil {
+			issues = append(issues, err.Error())
+		}
 	}
 
 	// Handle exception case Stats.Deciles.
 	for i, percent := range deciles {
-		output.Deciles[i], issues = computeDecile(percent, data, issues)
+		stat, err := computeDecile(percent, data)
+		output.Deciles[i] = time.Duration(stat)
+		if err != nil {
+			issues = append(issues, err.Error())
+		}
 	}
 
 	if len(issues) > 0 {
@@ -82,24 +88,20 @@ func Compute(data stats.Float64Data) (Stats, error) {
 	return output, nil
 }
 
-func computeStat(f func(in stats.Float64Data) (float64, error), data stats.Float64Data, e []string) (time.Duration, []string) {
+func computeStat(f func(in stats.Float64Data) (float64, error), data stats.Float64Data, name string) (float64, error) {
 	stat, err := f(data)
 	if err != nil {
-		funcname := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
-		// github.com/montanaflynn/stats.Min -> Min
-		funcname = strings.Split(funcname, ".")[2:][0]
-		e = append(e, fmt.Sprintf("%s: %s", funcname, err))
-		return 0, e
+		return 0, fmt.Errorf("%s: %w", name, err)
 	}
-	return time.Duration(stat), e
+	return stat, nil
 }
 
-func computeDecile(percent float64, data stats.Float64Data, e []string) (time.Duration, []string) {
+func computeDecile(percent float64, data stats.Float64Data) (float64, error) {
 	decile, err := stats.Percentile(data, percent)
 	if err != nil {
-		funcname := "Percentile"
-		e = append(e, fmt.Sprintf("%s: %s", funcname, err))
-		return 0, e
+		name := "percentile"
+		return 0, fmt.Errorf("%s: computing %s percentile with slice of length %d: %w",
+			name, ordinal(int(percent/100+1)), len(data), err)
 	}
-	return time.Duration(decile), e
+	return decile, nil
 }

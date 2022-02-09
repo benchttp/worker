@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	// ErrEmptySlice is returned when an empty slice is passed to Transform.
-	ErrEmptySlice = errors.New("attempted to transform empty slice")
+	// ErrEmptySlice is returned when working on an empty slice.
+	ErrEmptySlice = errors.New("input slice is empty")
 	// ErrInterface is returned when a struct that does not implement
 	// Floater is passed to TransformIter.
 	ErrInterface = errors.New("must implement timestats.Floater")
