@@ -14,7 +14,7 @@ type Floater interface {
 
 // TransformIter returns a data set ready for computation.
 // The data set is built with floats retrieved from x.
-// x must be a slice of structs implementing timestats.Floater.
+// x must be a slice of timestats.Floater.
 func TransformIter(x interface{}) (stats.Float64Data, error) {
 	s := reflect.ValueOf(x)
 	if s.Kind() != reflect.Slice {

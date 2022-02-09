@@ -10,12 +10,12 @@ import (
 	"github.com/benchttp/worker/timestats"
 )
 
-type fake struct {
+type floater struct {
 	time time.Duration
 	any  interface{} //nolint
 }
 
-func (e fake) Float() float64 {
+func (e floater) Float() float64 {
 	return float64(e.time)
 }
 
@@ -33,19 +33,19 @@ func TestTransformIter(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "return error for slice of structs that do not implement timestats.fake",
+			name:    "return error for slice of structs that do not implement timestats.Floater",
 			raw:     []struct{}{{}},
 			want:    nil,
 			wantErr: true,
 		},
 		{
-			name: "transform struct that implements timestats.fake",
-			raw:  []fake{{time: 1 * time.Nanosecond}, {time: 2 * time.Second}},
+			name: "transform struct that implements timestats.Floater",
+			raw:  []floater{{time: 1 * time.Nanosecond}, {time: 2 * time.Second}},
 			want: stats.Float64Data{1, 2000000000},
 		},
 		{
 			name: "discard unnecessary struct fields",
-			raw:  []fake{{time: 1 * time.Nanosecond, any: struct{}{}}},
+			raw:  []floater{{time: 1 * time.Nanosecond, any: struct{}{}}},
 			want: stats.Float64Data{1},
 		},
 	} {
@@ -70,12 +70,12 @@ func TestTransformIter(t *testing.T) {
 	}
 }
 
-type fakes []struct {
+type floatSlicer []struct {
 	time time.Duration
 	any  interface{}
 }
 
-func (f fakes) FloatSlice() []float64 {
+func (f floatSlicer) FloatSlice() []float64 {
 	floats := make([]float64, len(f))
 	for i, v := range f {
 		floats[i] = float64(v.time)
@@ -91,12 +91,12 @@ func TestTransform(t *testing.T) {
 	}{
 		{
 			name: "load type that implements timestats.Transform",
-			raw:  fakes{{time: 1 * time.Nanosecond}, {time: 2 * time.Second}},
+			raw:  floatSlicer{{time: 1 * time.Nanosecond}, {time: 2 * time.Second}},
 			want: stats.Float64Data{1, 2000000000},
 		},
 		{
 			name: "discard unnecessary struct fields",
-			raw:  fakes{{time: 1 * time.Nanosecond, any: struct{}{}}},
+			raw:  floatSlicer{{time: 1 * time.Nanosecond, any: struct{}{}}},
 			want: stats.Float64Data{1},
 		},
 	} {
