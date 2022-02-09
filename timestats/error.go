@@ -14,11 +14,11 @@ var (
 	ErrInterface = errors.New("must implement timestats.Floater")
 )
 
-// ErrCompute is returned when Compute fails to compute a stat.
-type ErrCompute struct {
+// ComputeError is returned when Compute fails to compute a stat.
+type ComputeError struct {
 	Errors []string
 }
 
-func (e *ErrCompute) Error() string {
+func (e *ComputeError) Error() string {
 	return fmt.Sprintf("failed to compute stat:\n  %s", strings.Join(e.Errors, "\n  "))
 }

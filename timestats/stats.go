@@ -77,7 +77,7 @@ func Compute(data stats.Float64Data) (Stats, error) {
 	}
 
 	if len(issues) > 0 {
-		return output, &ErrCompute{issues}
+		return output, &ComputeError{issues}
 	}
 	return output, nil
 }

@@ -32,7 +32,7 @@ func TestCompute(t *testing.T) {
 			{
 				name: "not enough values",
 				data: stats.Float64Data{1, 1, 1, 1, 1, 1, 1, 1, 1}, // 9 values is not enough for 9 deciles
-				want: &timestats.ErrCompute{},
+				want: &timestats.ComputeError{},
 				zero: false,
 			},
 		} {
