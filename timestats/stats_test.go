@@ -1,6 +1,7 @@
 package timestats_test
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -15,15 +16,44 @@ import (
 // We can safely assume it is correctly tested.
 
 func TestCompute(t *testing.T) {
-	t.Run("passing invalid dataset returns ErrCompute", func(t *testing.T) {
-		empty := stats.Float64Data{}
+	t.Run("passing invalid dataset returns error", func(t *testing.T) {
+		for _, testcase := range []struct {
+			name string
+			data stats.Float64Data
+			want interface{}
+			zero bool // whether or not Compute response may be partially written
+		}{
+			{
+				name: "empty dataset",
+				data: stats.Float64Data{},
+				want: timestats.ErrEmptySlice,
+				zero: true,
+			},
+			{
+				name: "not enough values",
+				data: stats.Float64Data{1, 1, 1, 1, 1, 1, 1, 1, 1}, // 9 values is not enough for 9 deciles
+				want: &timestats.ErrCompute{},
+				zero: false,
+			},
+		} {
+			t.Run(testcase.name, func(t *testing.T) {
+				res, err := timestats.Compute(testcase.data)
 
-		res, err := timestats.Compute(empty)
-		if err == nil {
-			t.Error("want error, got none")
-		}
-		if !reflect.ValueOf(res).IsZero() {
-			t.Errorf("want timestats.Stats to be non-zero value, got %+v", res)
+				if err == nil {
+					t.Error("want error, got none")
+				}
+
+				if !errors.As(err, &testcase.want) {
+					t.Errorf("want %T, got %+v", testcase.want, err)
+				}
+
+				switch {
+				case testcase.zero && !reflect.ValueOf(res).IsZero():
+					t.Errorf("want stats output to be zero value, got %+v", res)
+				case !testcase.zero && reflect.ValueOf(res).IsZero():
+					t.Error("want stats output to be non-zero value, got zero value")
+				}
+			})
 		}
 	})
 
@@ -34,8 +64,9 @@ func TestCompute(t *testing.T) {
 		if err != nil {
 			t.Fatalf("want nil error, got %v", err)
 		}
+
 		if reflect.ValueOf(res).IsZero() {
-			t.Errorf("want timestats.Stats to be non-zero value, got %+v", res)
+			t.Error("want stats output to be non-zero value, got zero value")
 		}
 	})
 }

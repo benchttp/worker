@@ -33,12 +33,6 @@ func TestTransformIter(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "return error for empty slice",
-			raw:     []fake{},
-			want:    nil,
-			wantErr: true,
-		},
-		{
 			name:    "return error for slice of structs that do not implement timestats.fake",
 			raw:     []struct{}{{}},
 			want:    nil,
@@ -64,6 +58,7 @@ func TestTransformIter(t *testing.T) {
 				}
 				return // Do not continue test case, transformer == nil.
 			}
+
 			if err != nil {
 				t.Fatalf("want nil error, got %v", err)
 			}
@@ -90,17 +85,10 @@ func (f fakes) FloatSlice() []float64 {
 
 func TestTransform(t *testing.T) {
 	for _, testcase := range []struct {
-		name    string
-		raw     timestats.FloatSlicer
-		want    stats.Float64Data
-		wantErr bool
+		name string
+		raw  timestats.FloatSlicer
+		want stats.Float64Data
 	}{
-		{
-			name:    "return error for empty slice",
-			raw:     fakes{},
-			want:    nil,
-			wantErr: true,
-		},
 		{
 			name: "load type that implements timestats.Transform",
 			raw:  fakes{{time: 1 * time.Nanosecond}, {time: 2 * time.Second}},
@@ -113,17 +101,7 @@ func TestTransform(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
-			got, err := timestats.Transform(testcase.raw)
-
-			if testcase.wantErr {
-				if err == nil {
-					t.Fatal("want error, have none")
-				}
-				return // Do not continue test case, transformer == nil.
-			}
-			if err != nil {
-				t.Fatalf("want nil error, got %v", err)
-			}
+			got := timestats.Transform(testcase.raw)
 
 			if !reflect.DeepEqual(got, testcase.want) {
 				t.Errorf("incorrect transform: want %v, got %v", testcase.want, got)

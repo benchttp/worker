@@ -21,10 +21,6 @@ func TransformIter(x interface{}) (stats.Float64Data, error) {
 		return nil, fmt.Errorf("received a non-slice type: %s", reflect.TypeOf(x))
 	}
 
-	if s.Len() == 0 {
-		return nil, ErrEmptySlice
-	}
-
 	floats := make(stats.Float64Data, s.Len())
 
 	for i := 0; i < s.Len(); i++ {
@@ -45,10 +41,6 @@ type FloatSlicer interface {
 
 // Transform returns a data set ready for computation.
 // The data set is extracted from the given FloatSlicer.
-func Transform(in FloatSlicer) (stats.Float64Data, error) {
-	floats := in.FloatSlice()
-	if len(floats) == 0 {
-		return nil, ErrEmptySlice
-	}
-	return floats, nil
+func Transform(in FloatSlicer) stats.Float64Data {
+	return in.FloatSlice()
 }

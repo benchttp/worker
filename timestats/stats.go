@@ -8,15 +8,15 @@
 //	type MySlice []int64
 //	func (s MySlice) FloatSlice() []float64 {...}
 //
-//	dataset, _ := timestats.Transform(MySlice{1, 2, 3})
-//	stats := timestats.Compute(dataset)
+//	dataset := timestats.Transform(MySlice{1, 2, 3})
+//	stats, err := timestats.Compute(dataset)
 //
 // Using timestats.Floater:
 //	type MyType int64
 //	func (t MyType) Float() float64 {...}
 //
-//	dataset, _ := timestats.Transform([]MyType{1, 2, 3})
-//	stats := timestats.Compute(dataset)
+//	dataset, err := timestats.TransformIter([]MyType{1, 2, 3})
+//	stats, err := timestats.Compute(dataset)
 //
 package timestats
 
@@ -50,7 +50,11 @@ type Stats struct {
 // When returning an error, the value of Stats may be
 // partially written.
 func Compute(data stats.Float64Data) (Stats, error) {
-	s := Stats{}
+	if len(data) == 0 {
+		return Stats{}, ErrEmptySlice
+	}
+
+	output := Stats{}
 	issues := []string{}
 
 	// Handle flat statistics.
@@ -58,24 +62,24 @@ func Compute(data stats.Float64Data) (Stats, error) {
 		f   func(input stats.Float64Data) (float64, error)
 		dst *time.Duration
 	}{
-		{stats.Min, &s.Min},
-		{stats.Max, &s.Max},
-		{stats.Mean, &s.Mean},
-		{stats.Median, &s.Median},
-		{stats.Variance, &s.Variance},
+		{stats.Min, &output.Min},
+		{stats.Max, &output.Max},
+		{stats.Mean, &output.Mean},
+		{stats.Median, &output.Median},
+		{stats.Variance, &output.Variance},
 	} {
 		*v.dst, issues = computeStat(v.f, data, issues)
 	}
 
 	// Handle exception case Stats.Deciles.
 	for i, percent := range deciles {
-		s.Deciles[i], issues = computeDecile(percent, data, issues)
+		output.Deciles[i], issues = computeDecile(percent, data, issues)
 	}
 
 	if len(issues) > 0 {
-		return s, &ErrCompute{issues}
+		return output, &ErrCompute{issues}
 	}
-	return s, nil
+	return output, nil
 }
 
 func computeStat(f func(in stats.Float64Data) (float64, error), data stats.Float64Data, e []string) (time.Duration, []string) {
