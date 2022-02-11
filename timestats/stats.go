@@ -1,15 +1,27 @@
 // Package timestats provides a wrapper around github.com/montanaflynn/stats
-// to compute common statistics for a dataset of time.Duration values.
+// to compute common statistics for a dataset whose values are interpreted
+// as time.Duration.
 //
-// Any type implementing timestats.FloatSlicer can be
-// transformed to a dataset compatible with the package.
+// The package requires the dataset to be a slice of float64. The caller has
+// the responsibility of transforming the data into a usable dataset for
+// timestats.Compute.
 //
 // For example:
-//	type MySlice []int64
-//	func (s MySlice) FloatSlice() []float64 {...}
+//	type MyType struct {
+//		times time.Duration[]
+//	}
 //
-//	dataset := timestats.Transform(MySlice{1, 2, 3})
-//	stats, err := timestats.Compute(dataset)
+//	func (t MyType) FloatSlice() []float64 {
+//		floats := make([]float64, len(t.times))
+//		for i, v := range t.times {
+//			floats[i] = float64(v)
+//		}
+//		return floats
+//	}
+//
+//	var t MyType
+//
+//	stats, err := timestats.Compute(t.FloatSlice())
 //
 package timestats
 
@@ -39,7 +51,7 @@ type Stats struct {
 // ErrCompute if any error occurs during the computation.
 // When returning an error, the value of Stats may be
 // partially written.
-func Compute(data stats.Float64Data) (Stats, error) {
+func Compute(data []float64) (Stats, error) {
 	if len(data) == 0 {
 		return Stats{}, ErrEmptySlice
 	}
@@ -81,7 +93,7 @@ func Compute(data stats.Float64Data) (Stats, error) {
 	return output, nil
 }
 
-func computeStat(f func(in stats.Float64Data) (float64, error), data stats.Float64Data, name string) (float64, error) {
+func computeStat(f func(in stats.Float64Data) (float64, error), data []float64, name string) (float64, error) {
 	stat, err := f(data)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", name, err)
@@ -89,7 +101,7 @@ func computeStat(f func(in stats.Float64Data) (float64, error), data stats.Float
 	return stat, nil
 }
 
-func computeDecile(percent float64, data stats.Float64Data) (float64, error) {
+func computeDecile(percent float64, data []float64) (float64, error) {
 	decile, err := stats.Percentile(data, percent)
 	if err != nil {
 		name := "percentile"
