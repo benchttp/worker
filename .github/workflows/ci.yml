@@ -26,7 +26,3 @@ jobs:
       # Check #2: Test
       - name: Test
         run: make tests
-
-      # Check #3: Build
-      - name: Build Server
-        run: make build

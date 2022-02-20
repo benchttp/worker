@@ -2,8 +2,10 @@ package timestats_test
 
 import (
 	"errors"
+	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/montanaflynn/stats"
 
@@ -58,8 +60,14 @@ func TestCompute(t *testing.T) {
 	})
 
 	t.Run("happy path", func(t *testing.T) {
-		data := stats.Float64Data{1, 10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000}
+		var (
+			size = 10000
+			min  = 1 * time.Nanosecond
+			max  = time.Duration(size) * time.Nanosecond
+			mean = 5000 * time.Nanosecond
+		)
 
+		data := newDataStub(size)
 		res, err := timestats.Compute(data)
 		if err != nil {
 			t.Fatalf("want nil error, got %v", err)
@@ -68,5 +76,32 @@ func TestCompute(t *testing.T) {
 		if reflect.ValueOf(res).IsZero() {
 			t.Error("want stats output to be non-zero value, got zero value")
 		}
+
+		if res.Min != min {
+			t.Errorf("want min as %s, got %s", res.Min, min)
+		}
+		if res.Max != max {
+			t.Errorf("want max as %s, got %s", res.Max, max)
+		}
+		if res.Mean != mean {
+			t.Errorf("want mean as %s, got %s", res.Mean, mean)
+		}
 	})
+}
+
+// newDataStub returns a slice of float64 of length size. It is filled
+// with randomly arranged numbers but with the assurance of containing
+// exactly one onccurrence of each number from 0 to size. For example:
+//
+//	newDataStub(10) -> [1 5 3 7 9 2 4 6 8 0]
+//
+// The returned dataset offers predictable output when computing common
+// statistics such as min, max, mean, etc.
+func newDataStub(size int) stats.Float64Data {
+	floats := make([]float64, size)
+
+	for i, v := range rand.Perm(size) {
+		floats[i] = float64(v + 1)
+	}
+	return floats
 }
