@@ -1,7 +1,7 @@
 // Package firestoreconv offers a way to convert a Firestore protobuf document
 // received on a Firestore Trigger event to a defined Go struct.
 //
-// The functionnality is limited to a simple conversion into internal.Report.
+// The functionnality is limited to a simple conversion into internal.Benchmark.
 // Only the strictly required fields for the usecase are supported.
 //
 // firestoreconv exists to work around googleapis/google-cloud-go not offering
@@ -25,22 +25,34 @@ import (
 // a protobuf MapValue and the field is not present in the map.
 var ErrMapValueField = errors.New("key is not in protobuf map value")
 
-// ToReport converts a Firestore event payload to a usable internal.Report.
-func ToReport(v *firestore.Value) (internal.Report, error) {
-	r := internal.Report{}
+// ToBenchmark converts a Firestore event payload to a usable internal.RunOutput.
+func ToBenchmark(v *firestore.Value) (internal.Benchmark, error) {
+	rs := []internal.Record{}
 
-	recordspb, ok := v.Fields["records"]
+	// {"Value": {"Fields": {"report": ...} } }
+	reportField, ok := v.Fields["report"]
 	if !ok {
-		return internal.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "records")
+		return internal.Benchmark{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "report")
 	}
 
-	for _, v := range recordspb.ArrayValue.Values {
-		timepb, ok := v.MapValue.Fields["time"]
+	// ...: {"MapValue": {"Fields": {"records": ...} } }
+	recordField, ok := reportField.MapValue.Fields["records"]
+	if !ok {
+		return internal.Benchmark{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "records")
+	}
+
+	// ...: {"ArrayValue": {"Values": [...] } }
+	for _, v := range recordField.ArrayValue.Values {
+		// ...: {"MapValue": {"Fields": {"time": {"IntegerValue": ... } } } }
+		timeField, ok := v.MapValue.Fields["time"]
 		if !ok {
-			return internal.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "time")
+			return internal.Benchmark{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "time")
 		}
-		r.Records = append(r.Records, internal.Record{Time: time.Duration(*timepb.IntegerValue)})
+		rs = append(rs, internal.Record{Time: time.Duration(*timeField.IntegerValue)})
 	}
 
-	return r, nil
+	var b internal.Benchmark
+	b.Report.Records = rs
+
+	return b, nil
 }

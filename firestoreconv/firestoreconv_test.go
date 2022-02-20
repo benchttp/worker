@@ -10,27 +10,33 @@ import (
 	"github.com/benchttp/worker/internal"
 )
 
-func TestToReport(t *testing.T) {
+func TestToBenchmark(t *testing.T) {
 	e := firestore.DocumentEventData{
 		Value: &firestore.Value{
 			Fields: map[string]firestore.OldValueField{
-				"records": {
-					ArrayValue: &firestore.ArrayValue{
-						Values: []firestore.ValueElement{
-							{
-								MapValue: &firestore.MapValue{
-									Fields: map[string]firestore.MapValueField{
-										"time": {
-											IntegerValue: newInt64(100),
+				"report": {
+					MapValue: &firestore.MapValue{
+						Fields: map[string]firestore.MapValueField{
+							"records": {
+								ArrayValue: &firestore.ArrayValue{
+									Values: []firestore.ValueElement{
+										{
+											MapValue: &firestore.MapValue{
+												Fields: map[string]firestore.MapValueField{
+													"time": {
+														IntegerValue: newInt64(100),
+													},
+												},
+											},
 										},
-									},
-								},
-							},
-							{
-								MapValue: &firestore.MapValue{
-									Fields: map[string]firestore.MapValueField{
-										"time": {
-											IntegerValue: newInt64(200),
+										{
+											MapValue: &firestore.MapValue{
+												Fields: map[string]firestore.MapValueField{
+													"time": {
+														IntegerValue: newInt64(200),
+													},
+												},
+											},
 										},
 									},
 								},
@@ -42,14 +48,16 @@ func TestToReport(t *testing.T) {
 		},
 	}
 
-	want := internal.Report{
-		Records: []internal.Record{
-			{Time: 100},
-			{Time: 200},
+	want := internal.Benchmark{
+		Report: internal.Report{
+			Records: []internal.Record{
+				{Time: 100},
+				{Time: 200},
+			},
 		},
 	}
 
-	got, err := firestoreconv.ToReport(e.Value)
+	got, err := firestoreconv.ToBenchmark(e.Value)
 	if err != nil {
 		t.Errorf("want nil error, got %s", err)
 	}
