@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/benchttp/worker/stats"
-	"github.com/benchttp/worker/timestats"
 )
 
 func TestCompute(t *testing.T) {
@@ -21,7 +20,7 @@ func TestCompute(t *testing.T) {
 			{
 				name: "empty dataset",
 				data: []float64{},
-				want: timestats.ErrEmptySlice,
+				want: stats.ErrEmptySlice,
 				zero: true,
 			},
 			{
