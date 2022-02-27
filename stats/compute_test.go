@@ -85,13 +85,13 @@ func TestCompute(t *testing.T) {
 			{"median", want.Median, got.Median},
 			// {"standard deviation", want.StdDev, got.StdDev},
 		} {
-			if !inRange(stat.got, stat.want, 1) {
+			if !approxEqual(stat.got, stat.want, 1) {
 				t.Errorf("%s: want %f, got %f", stat.name, stat.want, stat.got)
 			}
 		}
 
 		for i, got := range got.Deciles {
-			if !inRange(got, want.Deciles[i], 1) {
+			if !approxEqual(got, want.Deciles[i], 1) {
 				t.Errorf("decile %d: want %f, got %f", (i+1)*100, got, want.Deciles[i])
 			}
 		}
@@ -115,7 +115,7 @@ func newDataStub(size int) []float64 {
 	return floats
 }
 
-// inRange returns true if val is equal to target with a margin of error.
-func inRange(val, target, margin float64) bool {
+// approxEqual returns true if val is equal to target with a margin of error.
+func approxEqual(val, target, margin float64) bool {
 	return val >= target-margin && val <= target+margin
 }
