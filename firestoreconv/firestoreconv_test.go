@@ -6,15 +6,15 @@ import (
 
 	"github.com/googleapis/google-cloudevents-go/cloud/firestore/v1"
 
+	"github.com/benchttp/worker/benchttp"
 	"github.com/benchttp/worker/firestoreconv"
-	"github.com/benchttp/worker/internal"
 )
 
 func TestToBenchmark(t *testing.T) {
 	e := firestore.DocumentEventData{
 		Value: &firestore.Value{
 			Fields: map[string]firestore.OldValueField{
-				"report": {
+				"benchmark": {
 					MapValue: &firestore.MapValue{
 						Fields: map[string]firestore.MapValueField{
 							"records": {
@@ -48,16 +48,16 @@ func TestToBenchmark(t *testing.T) {
 		},
 	}
 
-	want := internal.Benchmark{
-		Report: internal.Report{
-			Records: []internal.Record{
+	want := benchttp.Report{
+		Benchmark: benchttp.Benchmark{
+			Records: []benchttp.Record{
 				{Time: 100},
 				{Time: 200},
 			},
 		},
 	}
 
-	got, err := firestoreconv.ToBenchmark(e.Value)
+	got, err := firestoreconv.Report(e.Value)
 	if err != nil {
 		t.Errorf("want nil error, got %s", err)
 	}

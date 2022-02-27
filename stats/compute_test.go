@@ -1,45 +1,37 @@
-package timestats_test
+package stats_test
 
 import (
 	"errors"
 	"math/rand"
 	"reflect"
 	"testing"
-	"time"
 
-	"github.com/montanaflynn/stats"
-
-	"github.com/benchttp/worker/timestats"
+	"github.com/benchttp/worker/stats"
 )
-
-// The following test simply tests that timestats.Compute return a non-zero
-// value of timestats.Stats. The actual statistics computation is not tested,
-// as it would be equivalent to testing the third party  package itself.
-// We can safely assume it is correctly tested.
 
 func TestCompute(t *testing.T) {
 	t.Run("passing invalid dataset returns error", func(t *testing.T) {
 		for _, testcase := range []struct {
 			name string
-			data stats.Float64Data
-			want interface{}
+			data []float64
+			want error
 			zero bool // whether or not Compute response may be partially written
 		}{
 			{
 				name: "empty dataset",
-				data: stats.Float64Data{},
-				want: timestats.ErrEmptySlice,
+				data: []float64{},
+				want: stats.ErrEmptySlice,
 				zero: true,
 			},
 			{
 				name: "not enough values",
-				data: stats.Float64Data{1, 1, 1, 1, 1, 1, 1, 1, 1}, // 9 values is not enough for 9 deciles
-				want: &timestats.ComputeError{},
+				data: newDataStub(2), // not enough for 9 deciles
+				want: &stats.ComputeError{},
 				zero: false,
 			},
 		} {
 			t.Run(testcase.name, func(t *testing.T) {
-				res, err := timestats.Compute(testcase.data)
+				res, err := stats.Compute(testcase.data)
 
 				if err == nil {
 					t.Error("want error, got none")
@@ -62,29 +54,46 @@ func TestCompute(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		var (
 			size = 10000
-			min  = 1 * time.Nanosecond
-			max  = time.Duration(size) * time.Nanosecond
-			mean = 5000 * time.Nanosecond
+			want = stats.Stats{
+				Min:    1,
+				Max:    10000,
+				Mean:   5000,
+				Median: 5000,
+				// StdDev:  0,
+				Deciles: [9]float64{1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000},
+			}
 		)
 
 		data := newDataStub(size)
-		res, err := timestats.Compute(data)
+		got, err := stats.Compute(data)
 		if err != nil {
 			t.Fatalf("want nil error, got %v", err)
 		}
 
-		if reflect.ValueOf(res).IsZero() {
+		if reflect.ValueOf(got).IsZero() {
 			t.Error("want stats output to be non-zero value, got zero value")
 		}
 
-		if res.Min != min {
-			t.Errorf("want min as %s, got %s", res.Min, min)
+		for _, stat := range []struct {
+			name string
+			want float64
+			got  float64
+		}{
+			{"min", want.Min, got.Min},
+			{"max", want.Max, got.Max},
+			{"mean", want.Mean, got.Mean},
+			{"median", want.Median, got.Median},
+			// {"standard deviation", want.StdDev, got.StdDev},
+		} {
+			if !approxEqual(stat.got, stat.want, 1) {
+				t.Errorf("%s: want %f, got %f", stat.name, stat.want, stat.got)
+			}
 		}
-		if res.Max != max {
-			t.Errorf("want max as %s, got %s", res.Max, max)
-		}
-		if res.Mean != mean {
-			t.Errorf("want mean as %s, got %s", res.Mean, mean)
+
+		for i, got := range got.Deciles {
+			if !approxEqual(got, want.Deciles[i], 1) {
+				t.Errorf("decile %d: want %f, got %f", (i+1)*100, got, want.Deciles[i])
+			}
 		}
 	})
 }
@@ -97,11 +106,16 @@ func TestCompute(t *testing.T) {
 //
 // The returned dataset offers predictable output when computing common
 // statistics such as min, max, mean, etc.
-func newDataStub(size int) stats.Float64Data {
+func newDataStub(size int) []float64 {
 	floats := make([]float64, size)
 
 	for i, v := range rand.Perm(size) {
 		floats[i] = float64(v + 1)
 	}
 	return floats
+}
+
+// approxEqual returns true if val is equal to target with a margin of error.
+func approxEqual(val, target, margin float64) bool {
+	return val >= target-margin && val <= target+margin
 }
