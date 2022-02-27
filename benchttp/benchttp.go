@@ -11,12 +11,12 @@ type Benchmark struct {
 	Records []Record
 }
 
-// Times returns the recorded exectution time of the requests
+// Times returns the recorded execution time of the requests
 // as a slice of floats.
 func (b Benchmark) Times() []float64 {
 	s := make([]float64, len(b.Records))
 	for i, v := range b.Records {
-		s[i] = float64(v.Time)
+		s[i] = v.Time
 	}
 	return s
 }

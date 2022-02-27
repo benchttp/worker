@@ -36,7 +36,7 @@ func Report(v *firestore.Value) (benchttp.Report, error) {
 		return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "records")
 	}
 
-	rs := make([]benchttp.Record, len(recordField.ArrayValue.Values))
+	records := make([]benchttp.Record, len(recordField.ArrayValue.Values))
 
 	for i, v := range recordField.ArrayValue.Values {
 		timeField, ok := v.MapValue.Fields["time"]
@@ -44,11 +44,11 @@ func Report(v *firestore.Value) (benchttp.Report, error) {
 			return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "time")
 		}
 
-		rs[i] = benchttp.Record{Time: float64(*timeField.IntegerValue)}
+		records[i] = benchttp.Record{Time: float64(*timeField.IntegerValue)}
 	}
 
-	var r benchttp.Report
-	r.Benchmark.Records = rs
+	var report benchttp.Report
+	report.Benchmark.Records = records
 
-	return r, nil
+	return report, nil
 }

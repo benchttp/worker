@@ -52,51 +52,49 @@ func TestCompute(t *testing.T) {
 	})
 
 	t.Run("happy path", func(t *testing.T) {
-		t.Run("happy path", func(t *testing.T) {
-			var (
-				size = 10000
-				want = stats.Stats{
-					Min:    1,
-					Max:    10000,
-					Mean:   5000,
-					Median: 5000,
-					// StdDev:  0,
-					Deciles: [9]float64{1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000},
-				}
-			)
-
-			data := newDataStub(size)
-			got, err := stats.Compute(data)
-			if err != nil {
-				t.Fatalf("want nil error, got %v", err)
+		var (
+			size = 10000
+			want = stats.Stats{
+				Min:    1,
+				Max:    10000,
+				Mean:   5000,
+				Median: 5000,
+				// StdDev:  0,
+				Deciles: [9]float64{1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000},
 			}
+		)
 
-			if reflect.ValueOf(got).IsZero() {
-				t.Error("want stats output to be non-zero value, got zero value")
-			}
+		data := newDataStub(size)
+		got, err := stats.Compute(data)
+		if err != nil {
+			t.Fatalf("want nil error, got %v", err)
+		}
 
-			for _, stat := range []struct {
-				name string
-				want float64
-				got  float64
-			}{
-				{"min", want.Min, got.Min},
-				{"max", want.Max, got.Max},
-				{"mean", want.Mean, got.Mean},
-				{"median", want.Median, got.Median},
-				// {"standard deviation", want.StdDev, got.StdDev},
-			} {
-				if !inRange(stat.got, stat.want, 1) {
-					t.Errorf("%s: want %f, got %f", stat.name, stat.want, stat.got)
-				}
-			}
+		if reflect.ValueOf(got).IsZero() {
+			t.Error("want stats output to be non-zero value, got zero value")
+		}
 
-			for i, got := range got.Deciles {
-				if !inRange(got, want.Deciles[i], 1) {
-					t.Errorf("decile %d: want %f, got %f", (i+1)*100, got, want.Deciles[i])
-				}
+		for _, stat := range []struct {
+			name string
+			want float64
+			got  float64
+		}{
+			{"min", want.Min, got.Min},
+			{"max", want.Max, got.Max},
+			{"mean", want.Mean, got.Mean},
+			{"median", want.Median, got.Median},
+			// {"standard deviation", want.StdDev, got.StdDev},
+		} {
+			if !inRange(stat.got, stat.want, 1) {
+				t.Errorf("%s: want %f, got %f", stat.name, stat.want, stat.got)
 			}
-		})
+		}
+
+		for i, got := range got.Deciles {
+			if !inRange(got, want.Deciles[i], 1) {
+				t.Errorf("decile %d: want %f, got %f", (i+1)*100, got, want.Deciles[i])
+			}
+		}
 	})
 }
 
