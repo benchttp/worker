@@ -13,8 +13,6 @@ import (
 // Digest is a Cloud Function triggered by a Firestore create document
 // event to extract, compute and store statistics of a Benchttp run.
 func Digest(ctx context.Context, e firestore.DocumentEventData) error {
-	log.Printf("→ firestore protobuf document: %v", e)
-
 	r, err := firestoreconv.Report(e.Value)
 	if err != nil {
 		return err
@@ -27,12 +25,7 @@ func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 		return err
 	}
 
-	b, err := s.MarshalJSON()
-	if err != nil {
-		log.Printf("warning: failed to marshal stats: %s", err)
-		return nil
-	}
-	log.Print(string(b))
+	log.Print(s.String())
 
 	return nil
 }

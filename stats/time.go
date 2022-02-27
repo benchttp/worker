@@ -1,24 +1,30 @@
 package stats
 
 import (
-	"encoding/json"
+	"fmt"
 	"time"
 )
 
-func (s *Stats) MarshalJSON() ([]byte, error) {
-	v := &struct {
-		Min     time.Duration    `json:"min"`
-		Max     time.Duration    `json:"max"`
-		Mean    time.Duration    `json:"mean"`
-		Median  time.Duration    `json:"median"`
-		StdDev  time.Duration    `json:"stddev"`
-		Deciles [9]time.Duration `json:"deciles"`
+// String returns a string representing the statistics
+// expressed in time.Duration.
+//	{min:100ms max:200ms ...}
+func (s *Stats) String() string {
+	v := struct {
+		Min     string
+		Max     string
+		Mean    string
+		Median  string
+		StdDev  string
+		Deciles [9]string
 	}{
-		Min:    time.Duration(s.Min),
-		Max:    time.Duration(s.Max),
-		Mean:   time.Duration(s.Mean),
-		Median: time.Duration(s.Median),
-		StdDev: time.Duration(s.StdDev),
+		Min:    time.Duration(s.Min).String(),
+		Max:    time.Duration(s.Max).String(),
+		Mean:   time.Duration(s.Mean).String(),
+		Median: time.Duration(s.Median).String(),
+		StdDev: time.Duration(s.StdDev).String(),
 	}
-	return json.MarshalIndent(v, "", "  ")
+	for i, d := range s.Deciles {
+		v.Deciles[i] = time.Duration(d).String()
+	}
+	return fmt.Sprintf("%+v", v)
 }
