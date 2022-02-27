@@ -15,19 +15,24 @@ import (
 func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 	log.Printf("→ firestore protobuf document: %v", e)
 
-	b, err := firestoreconv.Report(e.Value)
+	r, err := firestoreconv.Report(e.Value)
 	if err != nil {
 		return err
 	}
 
-	data := b.Benchmark.Times()
+	data := r.Benchmark.Times()
 
 	s, err := stats.Compute(data)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("→ computed stats: %v", s)
+	b, err := s.MarshalJSON()
+	if err != nil {
+		log.Printf("warning: failed to marshal stats: %s", err)
+		return nil
+	}
+	log.Print(string(b))
 
 	return nil
 }
