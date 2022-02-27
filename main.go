@@ -7,7 +7,7 @@ import (
 	"github.com/googleapis/google-cloudevents-go/cloud/firestore/v1"
 
 	"github.com/benchttp/worker/firestoreconv"
-	"github.com/benchttp/worker/internal"
+	"github.com/benchttp/worker/stats"
 )
 
 // Digest is a Cloud Function triggered by a Firestore create document
@@ -15,17 +15,19 @@ import (
 func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 	log.Printf("→ firestore protobuf document: %v", e)
 
-	b, err := firestoreconv.ToBenchmark(e.Value)
+	b, err := firestoreconv.Report(e.Value)
 	if err != nil {
 		return err
 	}
 
-	stats, err := internal.ComputeStats(b.Report)
+	data := b.Benchmark.Times()
+
+	s, err := stats.Compute(data)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("→ computed stats: %v", stats)
+	log.Printf("→ computed stats: %v", s)
 
 	return nil
 }

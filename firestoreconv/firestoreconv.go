@@ -1,7 +1,7 @@
 // Package firestoreconv offers a way to convert a Firestore protobuf document
 // received on a Firestore Trigger event to a defined Go struct.
 //
-// The functionnality is limited to a simple conversion into internal.Benchmark.
+// The functionnality is limited to a simple conversion into benchttp.Benchmark.
 // Only the strictly required fields for the usecase are supported.
 //
 // firestoreconv exists to work around googleapis/google-cloud-go not offering
@@ -14,45 +14,41 @@ package firestoreconv
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/googleapis/google-cloudevents-go/cloud/firestore/v1"
 
-	"github.com/benchttp/worker/internal"
+	"github.com/benchttp/worker/benchttp"
 )
 
 // ErrMapValueField is return when trying to access a field on
 // a protobuf MapValue and the field is not present in the map.
 var ErrMapValueField = errors.New("key is not in protobuf map value")
 
-// ToBenchmark converts a Firestore event payload to a usable internal.RunOutput.
-func ToBenchmark(v *firestore.Value) (internal.Benchmark, error) {
-	rs := []internal.Record{}
-
-	// {"Value": {"Fields": {"report": ...} } }
-	reportField, ok := v.Fields["report"]
+// Report converts a Firestore event payload to a usable benchttp.Report.
+func Report(v *firestore.Value) (benchttp.Report, error) {
+	benchmark, ok := v.Fields["benchmark"]
 	if !ok {
-		return internal.Benchmark{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "report")
+		return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "benchmark")
 	}
 
-	// ...: {"MapValue": {"Fields": {"records": ...} } }
-	recordField, ok := reportField.MapValue.Fields["records"]
+	recordField, ok := benchmark.MapValue.Fields["records"]
 	if !ok {
-		return internal.Benchmark{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "records")
+		return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "records")
 	}
 
-	// ...: {"ArrayValue": {"Values": [...] } }
-	for _, v := range recordField.ArrayValue.Values {
-		// ...: {"MapValue": {"Fields": {"time": {"IntegerValue": ... } } } }
+	rs := make([]benchttp.Record, len(recordField.ArrayValue.Values))
+
+	for i, v := range recordField.ArrayValue.Values {
 		timeField, ok := v.MapValue.Fields["time"]
 		if !ok {
-			return internal.Benchmark{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "time")
+			return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "time")
 		}
-		rs = append(rs, internal.Record{Time: time.Duration(*timeField.IntegerValue)})
+
+		rs[i] = benchttp.Record{Time: float64(*timeField.IntegerValue)}
 	}
 
-	var b internal.Benchmark
-	b.Report.Records = rs
+	var r benchttp.Report
+	r.Benchmark.Records = rs
 
-	return b, nil
+	return r, nil
 }
