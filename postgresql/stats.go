@@ -1,6 +1,8 @@
 package postgresql
 
 import (
+	"github.com/lib/pq"
+
 	"github.com/benchttp/worker/stats"
 )
 
@@ -21,6 +23,20 @@ func (s StatsService) Create(stats stats.Stats, statsId, userId, tag string) err
 		tx.Rollback()
 		return ErrExecutingPreparedStmt
 	}
+
+	insertIntoTimestats, err := tx.Prepare(`INSERT INTO public.timestats(stats_descriptor_id, min, max, mean, median, standard_deviation, deciles) VALUES
+	($1, $2, $3, $4, $5, $6, $7)`)
+	if err != nil {
+		tx.Rollback()
+		return ErrPreparingStmt
+	}
+	defer insertIntoTimestats.Close()
+
+	if _, err = insertIntoTimestats.Exec(statsId, stats.Min, stats.Max, stats.Mean, stats.Median, stats.StdDev, pq.Array(stats.Deciles)); err != nil {
+		tx.Rollback()
+		return ErrExecutingPreparedStmt
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
