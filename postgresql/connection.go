@@ -9,10 +9,14 @@ import (
 	"github.com/benchttp/worker/benchttp"
 )
 
+// InsertionService implements benchttp.InsertionService interface.
 type InsertionService struct {
 	db *sql.DB
 }
 
+// NewInsertionService connects to the database and provides an InsertionService
+// implementing benchttp.InsertionService, which provides a method to insert
+// data in database.
 func NewInsertionService(config benchttp.Config) (InsertionService, error) {
 	dbURI := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.Host,

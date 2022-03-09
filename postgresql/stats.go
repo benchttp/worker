@@ -6,6 +6,7 @@ import (
 	"github.com/benchttp/worker/benchttp"
 )
 
+// Insert inserts computed stats (benchttp.Stats) in the database.
 // nolint:gocognit
 func (s InsertionService) Insert(stats benchttp.Stats) error {
 	tx, err := s.db.Begin()

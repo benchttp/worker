@@ -17,6 +17,7 @@ import (
 
 // Digest is a Cloud Function triggered by a Firestore create document
 // event to extract, compute and store statistics of a Benchttp run.
+// It also stores the computed data in a SQL database.
 func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 	r, err := firestoreconv.Report(e.Value)
 	if err != nil {
@@ -87,6 +88,8 @@ func envConfig() (benchttp.Config, error) {
 	return config, nil
 }
 
+// buildStats builds a benchttp.Stats object.
+// Descriptor.FinishedAt is set at time.now().
 func buildStats(timestats stats.Common, codestats stats.StatusDistribution, reportID, userID string) benchttp.Stats {
 	computedstats := benchttp.Stats{
 		Descriptor: benchttp.StatsDescriptor{

@@ -6,7 +6,7 @@ import (
 	"github.com/benchttp/worker/stats"
 )
 
-// StatsDescriptor contains a computed stats group description information
+// StatsDescriptor contains a computed stats group description information.
 type StatsDescriptor struct {
 	ID         string    `json:"id"`
 	UserID     string    `json:"userID"`
@@ -14,13 +14,15 @@ type StatsDescriptor struct {
 	FinishedAt time.Time `json:"finishedAt"`
 }
 
-// Stats contains StatsDescriptor, Codestats and stats.Stats of a given computed stats group
+// Stats contains StatsDescriptor, Codestats and stats.Stats of a given computed stats group.
 type Stats struct {
 	Descriptor StatsDescriptor          `json:"descriptor"`
 	Code       stats.StatusDistribution `json:"code"`
 	Time       stats.Common             `json:"time"`
 }
 
+// Config contains the information needed to connect to the database
+// and set max idle connections and open connections number.
 type Config struct {
 	Host     string
 	User     string
