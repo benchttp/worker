@@ -18,14 +18,12 @@ func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 		return err
 	}
 
-	data := r.Benchmark.Times()
-
-	s, err := stats.Compute(data)
+	timestats, err := stats.ComputeCommon(r.Benchmark.Times())
 	if err != nil {
 		return err
 	}
 
-	log.Print(s.String())
+	log.Printf("timestats: %s", timestats.StringAsTime())
 
 	return nil
 }

@@ -9,13 +9,13 @@ import (
 	"github.com/benchttp/worker/stats"
 )
 
-func TestCompute(t *testing.T) {
+func TestComputeCommon(t *testing.T) {
 	t.Run("passing invalid dataset returns error", func(t *testing.T) {
 		for _, testcase := range []struct {
 			name string
 			data []float64
 			want error
-			zero bool // whether or not Compute response may be partially written
+			zero bool // whether or not ComputeCommon response may be partially written
 		}{
 			{
 				name: "empty dataset",
@@ -31,7 +31,7 @@ func TestCompute(t *testing.T) {
 			},
 		} {
 			t.Run(testcase.name, func(t *testing.T) {
-				res, err := stats.Compute(testcase.data)
+				res, err := stats.ComputeCommon(testcase.data)
 
 				if err == nil {
 					t.Error("want error, got none")
@@ -54,7 +54,7 @@ func TestCompute(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		var (
 			size = 10000
-			want = stats.Stats{
+			want = stats.Common{
 				Min:    1,
 				Max:    10000,
 				Mean:   5000,
@@ -65,7 +65,7 @@ func TestCompute(t *testing.T) {
 		)
 
 		data := newDataStub(size)
-		got, err := stats.Compute(data)
+		got, err := stats.ComputeCommon(data)
 		if err != nil {
 			t.Fatalf("want nil error, got %v", err)
 		}

@@ -9,12 +9,13 @@ package stats
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/montanaflynn/stats"
 )
 
-// Stats represents the statistics computed from a given dataset.
-type Stats struct {
+// Common represents the common statistics computed from a given dataset.
+type Common struct {
 	Min    float64
 	Max    float64
 	Mean   float64
@@ -27,15 +28,15 @@ type Stats struct {
 	Deciles [9]float64
 }
 
-// Compute computes the common statistics for a dataset. Returns ErrCompute
+// ComputeCommon computes the common statistics for a dataset. Returns ErrCompute
 // if any error occurs during the computation. When returning an error, the
 // value of Stats struct may be partially written.
-func Compute(data []float64) (Stats, error) {
+func ComputeCommon(data []float64) (Common, error) {
 	if len(data) == 0 {
-		return Stats{}, ErrEmptySlice
+		return Common{}, ErrEmptySlice
 	}
 
-	out := Stats{}
+	out := Common{}
 	errs := []string{}
 
 	out.Max, errs = pipe("max", errs)(stats.Max(data))
@@ -65,4 +66,28 @@ func pipe(name string, errs []string) func(float64, error) (float64, []string) {
 		}
 		return stat, errs
 	}
+}
+
+// StringAsTime returns a string representing the statistics
+// expressed in time.Duration.
+//	{min:100ms max:200ms ...}
+func (s *Common) StringAsTime() string {
+	v := struct {
+		Min     string
+		Max     string
+		Mean    string
+		Median  string
+		StdDev  string
+		Deciles [9]string
+	}{
+		Min:    time.Duration(s.Min).String(),
+		Max:    time.Duration(s.Max).String(),
+		Mean:   time.Duration(s.Mean).String(),
+		Median: time.Duration(s.Median).String(),
+		StdDev: time.Duration(s.StdDev).String(),
+	}
+	for i, d := range s.Deciles {
+		v.Deciles[i] = time.Duration(d).String()
+	}
+	return fmt.Sprintf("%+v", v)
 }
