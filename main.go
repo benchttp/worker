@@ -8,6 +8,7 @@ import (
 
 	"github.com/googleapis/google-cloudevents-go/cloud/firestore/v1"
 
+	"github.com/benchttp/worker/benchttp"
 	"github.com/benchttp/worker/firestoreconv"
 	"github.com/benchttp/worker/postgresql"
 	"github.com/benchttp/worker/stats"
@@ -43,17 +44,8 @@ func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 	return nil
 }
 
-type Config struct {
-	Host     string
-	User     string
-	Password string
-	DBName   string
-	IdleConn int
-	MaxConn  int
-}
-
-func envConfig() (Config, error) {
-	var config Config
+func envConfig() (benchttp.Config, error) {
+	var config benchttp.Config
 
 	config.Host = os.Getenv("PSQL_HOST")
 	if config.Host == "" {

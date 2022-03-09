@@ -3,11 +3,11 @@ package postgresql
 import (
 	"github.com/lib/pq"
 
-	"github.com/benchttp/worker/stats"
+	"github.com/benchttp/worker/benchttp"
 )
 
 // nolint:gocognit
-func (s InsertionService) Insert(statsToStore stats.Stats, statsID, userID, tag string) error {
+func (s InsertionService) Insert(stats benchttp.Stats, statsID, userID, tag string) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
@@ -59,12 +59,43 @@ func (s InsertionService) Insert(statsToStore stats.Stats, statsID, userID, tag 
 
 	if _, err = insertTimestats.Exec(
 		statsID,
-		statsToStore.Min,
-		statsToStore.Max,
-		statsToStore.Mean,
-		statsToStore.Median,
-		statsToStore.StdDev,
-		pq.Array(statsToStore.Deciles),
+		stats.Time.Min,
+		stats.Time.Max,
+		stats.Time.Mean,
+		stats.Time.Median,
+		stats.Time.StdDev,
+		pq.Array(stats.Time.Deciles),
+	); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+
+	insertCodestats, err := tx.Prepare(`
+	INSERT INTO codestats(
+		stats_descriptor_id,
+		code_1xx,
+		code_2xx,
+		code_3xx,
+		code_4xx,
+		code_5xx
+	) VALUES($1, $2, $3, $4, $5, $6)`)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
+		return err
+	}
+	defer insertCodestats.Close()
+
+	if _, err = insertCodestats.Exec(
+		statsID,
+		stats.Code.Status1xx,
+		stats.Code.Status2xx,
+		stats.Code.Status3xx,
+		stats.Code.Status4xx,
+		stats.Code.Status5xx,
 	); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return err

@@ -6,14 +6,14 @@ import (
 
 	_ "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/postgres" // blank import
 
-	"github.com/benchttp/worker"
+	"github.com/benchttp/worker/benchttp"
 )
 
 type InsertionService struct {
 	db *sql.DB
 }
 
-func NewInsertionService(config worker.Config) (InsertionService, error) {
+func NewInsertionService(config benchttp.Config) (InsertionService, error) {
 	dbURI := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.Host,
 		config.User,
