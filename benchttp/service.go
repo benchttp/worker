@@ -1,8 +1,10 @@
 package benchttp
 
-// StatsService defines the interface to implement by a
-// service facade inside the application.
-type StatsService interface {
+import "github.com/benchttp/worker/stats"
+
+// InsertService defines the interface to implement by a
+// data layer facade.
+type InsertionService interface {
 	// Create stores stats in database.
-	Create() error
+	Insert(stats.Stats, string, string, string) error
 }

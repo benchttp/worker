@@ -7,7 +7,7 @@ import (
 )
 
 // nolint:gocognit
-func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag string) error {
+func (s StatsService) Insert(statsToStore stats.Stats, statsID, userID, tag string) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
