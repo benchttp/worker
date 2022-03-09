@@ -7,7 +7,7 @@ import (
 )
 
 // nolint:gocognit
-func (s InsertionService) Insert(stats benchttp.Stats, statsID, userID, tag string) error {
+func (s InsertionService) Insert(stats benchttp.Stats) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
@@ -17,9 +17,8 @@ func (s InsertionService) Insert(stats benchttp.Stats, statsID, userID, tag stri
 	INSERT INTO public.stats_descriptor(
 		id,
 		user_id,
-		tag,
 		finished_at)
-		VALUES($1, $2, $3, '2022-03-03 17:36:38-02')`)
+		VALUES($1, $2, $3)`)
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			return err
@@ -29,9 +28,9 @@ func (s InsertionService) Insert(stats benchttp.Stats, statsID, userID, tag stri
 	defer insertStatsDescriptor.Close()
 
 	if _, err = insertStatsDescriptor.Exec(
-		statsID,
-		userID,
-		tag,
+		stats.Descriptor.ID,
+		stats.Descriptor.UserID,
+		stats.Descriptor.FinishedAt,
 	); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return err
@@ -58,7 +57,7 @@ func (s InsertionService) Insert(stats benchttp.Stats, statsID, userID, tag stri
 	defer insertTimestats.Close()
 
 	if _, err = insertTimestats.Exec(
-		statsID,
+		stats.Descriptor.ID,
 		stats.Time.Min,
 		stats.Time.Max,
 		stats.Time.Mean,
@@ -90,7 +89,7 @@ func (s InsertionService) Insert(stats benchttp.Stats, statsID, userID, tag stri
 	defer insertCodestats.Close()
 
 	if _, err = insertCodestats.Exec(
-		statsID,
+		stats.Descriptor.ID,
 		stats.Code.Status1xx,
 		stats.Code.Status2xx,
 		stats.Code.Status3xx,

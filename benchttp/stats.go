@@ -9,6 +9,7 @@ import (
 // StatsDescriptor contains a computed stats group description information
 type StatsDescriptor struct {
 	ID         string    `json:"id"`
+	UserID     string    `json:"userID"`
 	Tag        string    `json:"tag"`
 	FinishedAt time.Time `json:"finishedAt"`
 }

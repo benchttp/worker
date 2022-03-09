@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"time"
 
 	"github.com/googleapis/google-cloudevents-go/cloud/firestore/v1"
 
@@ -23,7 +24,13 @@ func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 	}
 
 	cfg, err := envConfig()
+	if err != nil {
+		return err
+	}
 	insertionService, err := postgresql.NewInsertionService(cfg)
+	if err != nil {
+		return err
+	}
 
 	codes, times := r.Benchmark.Values()
 
@@ -40,6 +47,13 @@ func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 	}
 
 	log.Printf("codestats: %+v", codestats)
+
+	// TO DO: get user id. Using "1" here for the moment.
+	statsToInsert := buildStats(timestats, codestats, "firestore_id", "1")
+
+	if err := insertionService.Insert(statsToInsert); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -71,4 +85,17 @@ func envConfig() (benchttp.Config, error) {
 	config.MaxConn = 25
 
 	return config, nil
+}
+
+func buildStats(timestats stats.Common, codestats stats.StatusDistribution, reportID, userID string) benchttp.Stats {
+	computedstats := benchttp.Stats{
+		Descriptor: benchttp.StatsDescriptor{
+			ID:         reportID,
+			UserID:     userID,
+			FinishedAt: time.Now(),
+		},
+		Time: timestats,
+		Code: codestats,
+	}
+	return computedstats
 }

@@ -4,5 +4,5 @@ package benchttp
 // data layer facade.
 type InsertionService interface {
 	// Create stores stats in database.
-	Insert(Stats, string, string, string) error
+	Insert(Stats) error
 }
