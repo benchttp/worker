@@ -25,5 +25,12 @@ func Digest(ctx context.Context, e firestore.DocumentEventData) error {
 
 	log.Printf("timestats: %s", timestats.StringAsTime())
 
+	codestats, err := stats.ComputeStatusDistribution(r.Benchmark.StatusCodes())
+	if err != nil {
+		return err
+	}
+
+	log.Printf("codestats: %+v", codestats)
+
 	return nil
 }
