@@ -26,6 +26,9 @@ func TestToBenchmark(t *testing.T) {
 													"time": {
 														IntegerValue: newInt64(100),
 													},
+													"code": {
+														IntegerValue: newInt64(200),
+													},
 												},
 											},
 										},
@@ -33,6 +36,9 @@ func TestToBenchmark(t *testing.T) {
 											MapValue: &firestore.MapValue{
 												Fields: map[string]firestore.MapValueField{
 													"time": {
+														IntegerValue: newInt64(200),
+													},
+													"code": {
 														IntegerValue: newInt64(200),
 													},
 												},
@@ -51,8 +57,8 @@ func TestToBenchmark(t *testing.T) {
 	want := benchttp.Report{
 		Benchmark: benchttp.Benchmark{
 			Records: []benchttp.Record{
-				{Time: 100},
-				{Time: 200},
+				{Time: 100, Code: 200},
+				{Time: 200, Code: 200},
 			},
 		},
 	}

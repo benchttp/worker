@@ -21,7 +21,18 @@ func (b Benchmark) Times() []float64 {
 	return s
 }
 
+// StatusCodes returns the recorded HTTP status codes of the
+// requests as a slice of ints.
+func (b Benchmark) StatusCodes() []int {
+	s := make([]int, len(b.Records))
+	for i, v := range b.Records {
+		s[i] = v.Code
+	}
+	return s
+}
+
 // Record represents the summary of a HTTP response.
 type Record struct {
 	Time float64
+	Code int
 }
