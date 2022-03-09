@@ -13,7 +13,7 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		return err
 	}
 
-	insertIntoStatsDescriptor, err := tx.Prepare(`INSERT INTO public.stats_descriptor(id, user_id, tag, finished_at) VALUES($1, $2, $3, '2022-03-03 17:36:38-02')`)
+	insertStatsDescriptor, err := tx.Prepare(`INSERT INTO public.stats_descriptor(id, user_id, tag, finished_at) VALUES($1, $2, $3, '2022-03-03 17:36:38-02')`)
 	if err != nil {
 		err = tx.Rollback()
 		if err != nil {
@@ -21,9 +21,9 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		}
 		return ErrPreparingStmt
 	}
-	defer insertIntoStatsDescriptor.Close()
+	defer insertStatsDescriptor.Close()
 
-	if _, err = insertIntoStatsDescriptor.Exec(statsID, userID, tag); err != nil {
+	if _, err = insertStatsDescriptor.Exec(statsID, userID, tag); err != nil {
 		err = tx.Rollback()
 		if err != nil {
 			return ErrExecutingRollback
@@ -31,7 +31,7 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		return ErrExecutingPreparedStmt
 	}
 
-	insertIntoTimestats, err := tx.Prepare(`INSERT INTO public.timestats(stats_descriptor_id, min, max, mean, median, standard_deviation, deciles) VALUES
+	insertTimestats, err := tx.Prepare(`INSERT INTO public.timestats(stats_descriptor_id, min, max, mean, median, standard_deviation, deciles) VALUES
 	($1, $2, $3, $4, $5, $6, $7)`)
 	if err != nil {
 		err = tx.Rollback()
@@ -40,9 +40,9 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		}
 		return ErrPreparingStmt
 	}
-	defer insertIntoTimestats.Close()
+	defer insertTimestats.Close()
 
-	if _, err = insertIntoTimestats.Exec(statsID, statsToStore.Min, statsToStore.Max, statsToStore.Mean, statsToStore.Median, statsToStore.StdDev, pq.Array(statsToStore.Deciles)); err != nil {
+	if _, err = insertTimestats.Exec(statsID, statsToStore.Min, statsToStore.Max, statsToStore.Mean, statsToStore.Median, statsToStore.StdDev, pq.Array(statsToStore.Deciles)); err != nil {
 		err = tx.Rollback()
 		if err != nil {
 			return ErrExecutingRollback
