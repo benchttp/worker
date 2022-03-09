@@ -13,7 +13,13 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		return err
 	}
 
-	insertStatsDescriptor, err := tx.Prepare(`INSERT INTO public.stats_descriptor(id, user_id, tag, finished_at) VALUES($1, $2, $3, '2022-03-03 17:36:38-02')`)
+	insertStatsDescriptor, err := tx.Prepare(`
+	INSERT INTO public.stats_descriptor(
+		id,
+		user_id,
+		tag,
+		finished_at)
+		VALUES($1, $2, $3, '2022-03-03 17:36:38-02')`)
 	if err != nil {
 		err = tx.Rollback()
 		if err != nil {
@@ -31,8 +37,16 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		return ErrExecutingPreparedStmt
 	}
 
-	insertTimestats, err := tx.Prepare(`INSERT INTO public.timestats(stats_descriptor_id, min, max, mean, median, standard_deviation, deciles) VALUES
-	($1, $2, $3, $4, $5, $6, $7)`)
+	insertTimestats, err := tx.Prepare(`
+	INSERT INTO public.timestats(
+		stats_descriptor_id, 
+		min, 
+		max, 
+		mean, 
+		median, 
+		standard_deviation, 
+		deciles) 
+	VALUES($1, $2, $3, $4, $5, $6, $7)`)
 	if err != nil {
 		err = tx.Rollback()
 		if err != nil {
@@ -42,7 +56,14 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 	}
 	defer insertTimestats.Close()
 
-	if _, err = insertTimestats.Exec(statsID, statsToStore.Min, statsToStore.Max, statsToStore.Mean, statsToStore.Median, statsToStore.StdDev, pq.Array(statsToStore.Deciles)); err != nil {
+	if _, err = insertTimestats.Exec(
+		statsID,
+		statsToStore.Min,
+		statsToStore.Max,
+		statsToStore.Mean,
+		statsToStore.Median,
+		statsToStore.StdDev,
+		pq.Array(statsToStore.Deciles)); err != nil {
 		err = tx.Rollback()
 		if err != nil {
 			return ErrExecutingRollback
