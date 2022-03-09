@@ -23,4 +23,7 @@ var (
 	// ErrScanningRows is returned when the worker fails to scan the rows
 	// returned by a query.
 	ErrScanningRows = errors.New("error trying to scan result rows")
+	// ErrExecutingRollback is returned when the worker fails to rollback
+	// in a transaction.
+	ErrExecutingRollback = errors.New("error trying to rollback a transaction in database")
 )
