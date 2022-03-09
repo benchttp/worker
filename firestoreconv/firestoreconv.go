@@ -44,7 +44,15 @@ func Report(v *firestore.Value) (benchttp.Report, error) {
 			return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "time")
 		}
 
-		records[i] = benchttp.Record{Time: float64(*timeField.IntegerValue)}
+		codepb, ok := v.MapValue.Fields["code"]
+		if !ok {
+			return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "code")
+		}
+
+		records[i] = benchttp.Record{
+			Time: float64(*timeField.IntegerValue),
+			Code: int(*codepb.IntegerValue),
+		}
 	}
 
 	var report benchttp.Report
