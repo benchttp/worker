@@ -21,17 +21,19 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		finished_at)
 		VALUES($1, $2, $3, '2022-03-03 17:36:38-02')`)
 	if err != nil {
-		err = tx.Rollback()
-		if err != nil {
+		if err := tx.Rollback(); err != nil {
 			return err
 		}
 		return err
 	}
 	defer insertStatsDescriptor.Close()
 
-	if _, err = insertStatsDescriptor.Exec(statsID, userID, tag); err != nil {
-		err = tx.Rollback()
-		if err != nil {
+	if _, err = insertStatsDescriptor.Exec(
+		statsID,
+		userID,
+		tag,
+	); err != nil {
+		if err := tx.Rollback(); err != nil {
 			return err
 		}
 		return err
@@ -48,8 +50,7 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		deciles) 
 	VALUES($1, $2, $3, $4, $5, $6, $7)`)
 	if err != nil {
-		err = tx.Rollback()
-		if err != nil {
+		if err := tx.Rollback(); err != nil {
 			return err
 		}
 		return err
@@ -63,9 +64,9 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		statsToStore.Mean,
 		statsToStore.Median,
 		statsToStore.StdDev,
-		pq.Array(statsToStore.Deciles)); err != nil {
-		err = tx.Rollback()
-		if err != nil {
+		pq.Array(statsToStore.Deciles),
+	); err != nil {
+		if err := tx.Rollback(); err != nil {
 			return err
 		}
 		return err
@@ -73,8 +74,7 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 
 	err = tx.Commit()
 	if err != nil {
-		err = tx.Rollback()
-		if err != nil {
+		if err := tx.Rollback(); err != nil {
 			return err
 		}
 		return err
