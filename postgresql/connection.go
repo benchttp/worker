@@ -9,11 +9,11 @@ import (
 	_ "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/postgres" // blank import
 )
 
-type StatsService struct {
+type InsertionService struct {
 	db *sql.DB
 }
 
-func NewStatsService(config Config) (StatsService, error) {
+func NewInsertionService(config Config) (InsertionService, error) {
 	dbURI := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.Host,
 		config.User,
@@ -22,18 +22,18 @@ func NewStatsService(config Config) (StatsService, error) {
 
 	db, err := sql.Open("cloudsqlpostgres", dbURI)
 	if err != nil {
-		return StatsService{}, err
+		return InsertionService{}, err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		return StatsService{}, err
+		return InsertionService{}, err
 	}
 
 	db.SetMaxIdleConns(config.IdleConn)
 	db.SetMaxOpenConns(config.MaxConn)
 
-	return StatsService{db}, nil
+	return InsertionService{db}, nil
 }
 
 type Config struct {
