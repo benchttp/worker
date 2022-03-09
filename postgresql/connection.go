@@ -23,12 +23,12 @@ func NewStatsService(config Config) (StatsService, error) {
 
 	db, err := sql.Open("cloudsqlpostgres", dbURI)
 	if err != nil {
-		return StatsService{}, ErrDatabaseConnection
+		return StatsService{}, err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		return StatsService{}, ErrDatabasePing
+		return StatsService{}, err
 	}
 
 	db.SetMaxIdleConns(config.IdleConn)
@@ -57,22 +57,22 @@ func GetConfigFromEnvVariables() (Config, error) {
 
 	config.Host = os.Getenv("PSQL_HOST")
 	if config.Host == "" {
-		return config, ErrEnvironmentVariable
+		return config, err
 	}
 
 	config.User = os.Getenv("PSQL_USER")
 	if config.User == "" {
-		return config, ErrEnvironmentVariable
+		return config, err
 	}
 
 	config.Password = os.Getenv("PSQL_PASSWORD")
 	if config.Password == "" {
-		return config, ErrEnvironmentVariable
+		return config, err
 	}
 
 	config.DBName = os.Getenv("PSQL_NAME")
 	if config.DBName == "" {
-		return config, ErrEnvironmentVariable
+		return config, err
 	}
 
 	config.IdleConn = 10

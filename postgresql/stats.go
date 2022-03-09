@@ -23,18 +23,18 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 	if err != nil {
 		err = tx.Rollback()
 		if err != nil {
-			return ErrExecutingRollback
+			return err
 		}
-		return ErrPreparingStmt
+		return err
 	}
 	defer insertStatsDescriptor.Close()
 
 	if _, err = insertStatsDescriptor.Exec(statsID, userID, tag); err != nil {
 		err = tx.Rollback()
 		if err != nil {
-			return ErrExecutingRollback
+			return err
 		}
-		return ErrExecutingPreparedStmt
+		return err
 	}
 
 	insertTimestats, err := tx.Prepare(`
@@ -50,9 +50,9 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 	if err != nil {
 		err = tx.Rollback()
 		if err != nil {
-			return ErrExecutingRollback
+			return err
 		}
-		return ErrPreparingStmt
+		return err
 	}
 	defer insertTimestats.Close()
 
@@ -66,16 +66,16 @@ func (s StatsService) Create(statsToStore stats.Stats, statsID, userID, tag stri
 		pq.Array(statsToStore.Deciles)); err != nil {
 		err = tx.Rollback()
 		if err != nil {
-			return ErrExecutingRollback
+			return err
 		}
-		return ErrExecutingPreparedStmt
+		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		err = tx.Rollback()
 		if err != nil {
-			return ErrExecutingRollback
+			return err
 		}
 		return err
 	}
