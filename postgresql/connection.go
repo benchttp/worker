@@ -2,10 +2,9 @@ package postgresql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
-
-	"github.com/joho/godotenv"
 
 	_ "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/postgres" // blank import
 )
@@ -49,30 +48,24 @@ type Config struct {
 func GetConfigFromEnvVariables() (Config, error) {
 	var config Config
 
-	err := godotenv.Load(".env")
-	// no error returned here because .env is not deployed
-	if err != nil {
-		fmt.Println("no .env file found")
-	}
-
 	config.Host = os.Getenv("PSQL_HOST")
 	if config.Host == "" {
-		return config, err
+		return config, errors.New("PSQL_HOST environment variable not found")
 	}
 
 	config.User = os.Getenv("PSQL_USER")
 	if config.User == "" {
-		return config, err
+		return config, errors.New("PSQL_USER environment variable not found")
 	}
 
 	config.Password = os.Getenv("PSQL_PASSWORD")
 	if config.Password == "" {
-		return config, err
+		return config, errors.New("PSQL_PASSWORD environment variable not found")
 	}
 
 	config.DBName = os.Getenv("PSQL_NAME")
 	if config.DBName == "" {
-		return config, err
+		return config, errors.New("PSQL_NAME environment variable not found")
 	}
 
 	config.IdleConn = 10
