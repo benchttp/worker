@@ -14,6 +14,9 @@ func TestToBenchmark(t *testing.T) {
 	e := firestore.DocumentEventData{
 		Value: &firestore.Value{
 			Fields: map[string]firestore.OldValueField{
+				"id": {
+					StringValue: newString("1234"),
+				},
 				"benchmark": {
 					MapValue: &firestore.MapValue{
 						Fields: map[string]firestore.MapValueField{
@@ -55,6 +58,7 @@ func TestToBenchmark(t *testing.T) {
 	}
 
 	want := benchttp.Report{
+		ID: "1234",
 		Benchmark: benchttp.Benchmark{
 			Records: []benchttp.Record{
 				{Time: 100, Code: 200},
@@ -74,5 +78,10 @@ func TestToBenchmark(t *testing.T) {
 
 // newInt64 returns a pointer to the given int64 value.
 func newInt64(x int64) *int64 {
+	return &x
+}
+
+// newString returns a pointer to the given string value.
+func newString(x string) *string {
 	return &x
 }

@@ -26,6 +26,11 @@ var ErrMapValueField = errors.New("key is not in protobuf map value")
 
 // Report converts a Firestore event payload to a usable benchttp.Report.
 func Report(v *firestore.Value) (benchttp.Report, error) {
+	id, ok := v.Fields["id"]
+	if !ok {
+		return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "id")
+	}
+
 	benchmark, ok := v.Fields["benchmark"]
 	if !ok {
 		return benchttp.Report{}, fmt.Errorf(`%w: "%s"`, ErrMapValueField, "benchmark")
@@ -55,7 +60,7 @@ func Report(v *firestore.Value) (benchttp.Report, error) {
 		}
 	}
 
-	var report benchttp.Report
+	report := benchttp.Report{ID: *id.StringValue}
 	report.Benchmark.Records = records
 
 	return report, nil

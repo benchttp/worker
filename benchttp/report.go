@@ -2,6 +2,7 @@ package benchttp
 
 // Report represents the result of a Benchttp benchmark run.
 type Report struct {
+	ID        string
 	Benchmark Benchmark
 }
 
